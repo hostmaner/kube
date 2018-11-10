@@ -31,6 +31,7 @@ spec:
   selector:
     k8s-app: kube-dns
   clusterIP: __PILLAR__DNS__SERVER__
+# # clusterIP与kubelet启动参数--cluster-dns一致即可，在service cidr（api server参数）中预选1个地址做dns地址
   ports:
   - name: dns
     port: 53
@@ -97,6 +98,9 @@ spec:
       containers:
       - name: kubedns
         image: k8s.gcr.io/k8s-dns-kube-dns:1.14.13
+        #
+        #kubedns的镜像
+        #
         resources:
           # TODO: Set memory limits when we've profiled the container for large
           # clusters, then set request = limit to keep this container in
@@ -127,6 +131,9 @@ spec:
           timeoutSeconds: 5
         args:
         - --domain=__PILLAR__DNS__DOMAIN__.
+        #
+        #在kubelet中定制的--domain（cluster.local）
+        #
         - --dns-port=10053
         - --config-dir=/kube-dns-config
         - --v=2
@@ -148,6 +155,9 @@ spec:
           mountPath: /kube-dns-config
       - name: dnsmasq
         image: k8s.gcr.io/k8s-dns-dnsmasq-nanny:1.14.13
+        #
+        #dnsmasq需要用的镜像
+        #
         livenessProbe:
           httpGet:
             path: /healthcheck/dnsmasq
@@ -169,6 +179,9 @@ spec:
         - --dns-loop-detect
         - --log-facility=-
         - --server=/__PILLAR__DNS__DOMAIN__/127.0.0.1#10053
+        #
+        #kubelet中的domain（cluster.local）
+        #
         - --server=/in-addr.arpa/127.0.0.1#10053
         - --server=/ip6.arpa/127.0.0.1#10053
         ports:
@@ -188,6 +201,9 @@ spec:
           mountPath: /etc/k8s/dns/dnsmasq-nanny
       - name: sidecar
         image: k8s.gcr.io/k8s-dns-sidecar:1.14.13
+        #
+        #sidecar的镜像
+        #
         livenessProbe:
           httpGet:
             path: /metrics
@@ -201,7 +217,13 @@ spec:
         - --v=2
         - --logtostderr
         - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.__PILLAR__DNS__DOMAIN__,5,SRV
+        #
+        #kubelet中的domain（cluster.local）
+        #
         - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.__PILLAR__DNS__DOMAIN__,5,SRV
+        #
+        #kubelet中的domain（cluster.local）
+        #
         ports:
         - containerPort: 10054
           name: metrics
