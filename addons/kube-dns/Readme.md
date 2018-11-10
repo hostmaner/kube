@@ -2,4 +2,4 @@
 
 # clusterIP与kubelet启动参数--cluster-dns一致即可，在service cidr(在APIserver启动参数)中预选1个地址做dns地址
 
-# 修改后的kube-dns.yaml：https://github.com/Netonline2016/kubernetes/blob/master/addons/kubedns/kube-dns.yaml
+# 修改后的kube-dns.yaml：
